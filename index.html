@@ -748,18 +748,54 @@
         }
 
         function exportData() {
-            const data = {
-                players: players,
-                gameHistory: gameHistory,
-                exportDate: new Date().toLocaleString('pt-BR')
-            };
+            // Ordena jogadores por pontos para o CSV
+            const sortedPlayers = [...players].sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return b.draws - a.draws;
+            });
             
-            const dataStr = JSON.stringify(data, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            // Cria o CSV da classificação
+            let csvContent = "Classificação Geral\n";
+            csvContent += "Posição,Jogador,Pontos,Vitórias,Empates,Derrotas\n";
+            
+            sortedPlayers.forEach((player, index) => {
+                csvContent += `${index + 1},${player.name},${player.points},${player.wins},${player.draws},${player.losses}\n`;
+            });
+            
+            // Adiciona histórico de jogos se existir
+            if (gameHistory.length > 0) {
+                csvContent += "\n\nHistórico de Jogos\n";
+                csvContent += "Data,Time A,Time B,Resultado\n";
+                
+                gameHistory.forEach(game => {
+                    const teamAStr = game.teamA.join(' - ');
+                    const teamBStr = game.teamB.join(' - ');
+                    let resultStr = '';
+                    
+                    if (game.result === 'teamA') {
+                        resultStr = 'Time A Venceu';
+                    } else if (game.result === 'teamB') {
+                        resultStr = 'Time B Venceu';
+                    } else if (game.result === 'draw') {
+                        resultStr = 'Empate';
+                    }
+                    
+                    csvContent += `"${game.date}","${teamAStr}","${teamBStr}","${resultStr}"\n`;
+                });
+            }
+            
+            // Adiciona informações de exportação
+            csvContent += `\n\nExportado em: ${new Date().toLocaleString('pt-BR')}\n`;
+            csvContent += `Total de jogos: ${gameHistory.length}\n`;
+            csvContent += `Total de jogadores: ${players.length}\n`;
+            
+            // Cria e baixa o arquivo CSV
+            const dataBlob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = `futebol_dados_${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `futebol_classificacao_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
         }
 
