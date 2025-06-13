@@ -489,13 +489,19 @@
         }
 
         function updatePlayerName(index, newName) {
-            players[index].name = newName;
-            updateRanking();
+            // Não atualiza diretamente o array players para preservar a tabela de classificação
+            // A atualização só acontece quando salvar ou sortear times
             checkDrawButtonState();
         }
 
         function checkDrawButtonState() {
-            const filledPlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador ')).length;
+            // Verifica os nomes nos campos de entrada, não no array players
+            const container = document.getElementById('playerConfig');
+            const inputs = container.querySelectorAll('input');
+            const filledPlayers = Array.from(inputs).filter(input => 
+                input.value.trim() !== '' && !input.value.startsWith('Jogador ')
+            ).length;
+            
             const drawButton = document.querySelector('button[onclick="drawTeams()"]');
             const redrawButton = document.querySelector('button[onclick="redrawTeams()"]');
             
@@ -547,6 +553,7 @@
 
         function savePlayers() {
             // Atualiza os nomes dos jogadores com base nos valores dos campos de entrada
+            // APENAS quando o usuário explicitamente salva a configuração
             const container = document.getElementById('playerConfig');
             const inputs = container.querySelectorAll('input');
             
@@ -560,7 +567,7 @@
             };
             localStorage.setItem('footballData', JSON.stringify(data));
             updateRanking(); // Atualiza a tabela com os novos nomes
-            alert('✅ Configuração salva com sucesso!');
+            alert('✅ Configuração salva com sucesso! Os nomes foram atualizados na tabela de classificação.');
         }
 
         function drawTeams() {
@@ -568,11 +575,13 @@
             const container = document.getElementById('playerConfig');
             const inputs = container.querySelectorAll('input');
             
-            inputs.forEach((input, index) => {
-                players[index].name = input.value;
-            });
+            // Cria uma cópia temporária dos jogadores para o sorteio
+            const tempPlayers = players.map((player, index) => ({
+                ...player,
+                name: inputs[index].value
+            }));
             
-            const filledPlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador ')).length;
+            const filledPlayers = tempPlayers.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador ')).length;
             
             if (filledPlayers < 12) {
                 alert(`❌ É necessário ter pelo menos 12 jogadores preenchidos para sortear os times!\nAtualmente você tem apenas ${filledPlayers} jogadores.`);
@@ -580,7 +589,7 @@
             }
             
             // Filtra apenas jogadores com nomes preenchidos
-            const activePlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador '));
+            const activePlayers = tempPlayers.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador '));
             
             // Embaralha os jogadores ativos
             const shuffled = [...activePlayers].sort(() => Math.random() - 0.5);
