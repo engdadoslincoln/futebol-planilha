@@ -531,26 +531,47 @@
                 'Jogador 13', 'Jogador 14', 'Jogador 15', 'Jogador 16', 'Jogador 17', 'Jogador 18'
             ];
             
-            // Apenas altera os nomes, mantém as estatísticas (pontos, vitórias, empates, derrotas)
-            players.forEach((player, index) => {
-                player.name = defaultNames[index];
+            // Apenas reseta os campos de entrada visual, sem alterar os dados dos jogadores
+            // que já têm pontuação registrada na tabela de classificação
+            const container = document.getElementById('playerConfig');
+            const inputs = container.querySelectorAll('input');
+            
+            inputs.forEach((input, index) => {
+                input.value = defaultNames[index];
             });
             
-            renderPlayerConfig();
-            updateRanking(); // Atualiza a tabela com os novos nomes mas mesma pontuação
             checkDrawButtonState();
+            
+            alert('✅ Campos de entrada resetados! Os nomes na tabela de classificação foram preservados.');
         }
 
         function savePlayers() {
+            // Atualiza os nomes dos jogadores com base nos valores dos campos de entrada
+            const container = document.getElementById('playerConfig');
+            const inputs = container.querySelectorAll('input');
+            
+            inputs.forEach((input, index) => {
+                players[index].name = input.value;
+            });
+            
             const data = {
                 players: players,
                 gameHistory: gameHistory
             };
             localStorage.setItem('footballData', JSON.stringify(data));
+            updateRanking(); // Atualiza a tabela com os novos nomes
             alert('✅ Configuração salva com sucesso!');
         }
 
         function drawTeams() {
+            // Primeiro, sincroniza os nomes dos jogadores com os valores dos campos de entrada
+            const container = document.getElementById('playerConfig');
+            const inputs = container.querySelectorAll('input');
+            
+            inputs.forEach((input, index) => {
+                players[index].name = input.value;
+            });
+            
             const filledPlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador ')).length;
             
             if (filledPlayers < 12) {
@@ -747,3 +768,4 @@
     </script>
 </body>
 </html>
+
