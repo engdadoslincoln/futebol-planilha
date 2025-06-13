@@ -531,12 +531,14 @@
                 'Jogador 13', 'Jogador 14', 'Jogador 15', 'Jogador 16', 'Jogador 17', 'Jogador 18'
             ];
             
+            // Apenas altera os nomes, mantém as estatísticas (pontos, vitórias, empates, derrotas)
             players.forEach((player, index) => {
                 player.name = defaultNames[index];
             });
             
             renderPlayerConfig();
-            updateRanking();
+            updateRanking(); // Atualiza a tabela com os novos nomes mas mesma pontuação
+            checkDrawButtonState();
         }
 
         function savePlayers() {
