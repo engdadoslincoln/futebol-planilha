@@ -144,8 +144,17 @@
             box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .btn:disabled {
+            background: #ccc !important;
+            cursor: not-allowed !important;
+            opacity: 0.5 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn:disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         .btn-secondary {
@@ -474,11 +483,45 @@
                 `;
                 container.appendChild(div);
             });
+            
+            // Verifica o estado do botão após renderizar
+            setTimeout(checkDrawButtonState, 100);
         }
 
         function updatePlayerName(index, newName) {
             players[index].name = newName;
             updateRanking();
+            checkDrawButtonState();
+        }
+
+        function checkDrawButtonState() {
+            const filledPlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador ')).length;
+            const drawButton = document.querySelector('button[onclick="drawTeams()"]');
+            const redrawButton = document.querySelector('button[onclick="redrawTeams()"]');
+            
+            if (filledPlayers < 12) {
+                drawButton.disabled = true;
+                drawButton.style.opacity = '0.5';
+                drawButton.style.cursor = 'not-allowed';
+                drawButton.innerHTML = `🚫 Precisa de pelo menos 12 jogadores (${filledPlayers}/12)`;
+                
+                if (redrawButton) {
+                    redrawButton.disabled = true;
+                    redrawButton.style.opacity = '0.5';
+                    redrawButton.style.cursor = 'not-allowed';
+                }
+            } else {
+                drawButton.disabled = false;
+                drawButton.style.opacity = '1';
+                drawButton.style.cursor = 'pointer';
+                drawButton.innerHTML = '🎯 Sortear Times';
+                
+                if (redrawButton) {
+                    redrawButton.disabled = false;
+                    redrawButton.style.opacity = '1';
+                    redrawButton.style.cursor = 'pointer';
+                }
+            }
         }
 
         function resetPlayers() {
@@ -506,12 +549,25 @@
         }
 
         function drawTeams() {
-            // Embaralha os jogadores
-            const shuffled = [...players].sort(() => Math.random() - 0.5);
+            const filledPlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador ')).length;
             
-            // Divide em dois times de 9 jogadores cada
-            currentTeamA = shuffled.slice(0, 9);
-            currentTeamB = shuffled.slice(9, 18);
+            if (filledPlayers < 12) {
+                alert(`❌ É necessário ter pelo menos 12 jogadores preenchidos para sortear os times!\nAtualmente você tem apenas ${filledPlayers} jogadores.`);
+                return;
+            }
+            
+            // Filtra apenas jogadores com nomes preenchidos
+            const activePlayers = players.filter(player => player.name.trim() !== '' && !player.name.startsWith('Jogador '));
+            
+            // Embaralha os jogadores ativos
+            const shuffled = [...activePlayers].sort(() => Math.random() - 0.5);
+            
+            // Calcula quantos jogadores por time
+            const playersPerTeam = Math.floor(shuffled.length / 2);
+            
+            // Divide em dois times
+            currentTeamA = shuffled.slice(0, playersPerTeam);
+            currentTeamB = shuffled.slice(playersPerTeam, playersPerTeam * 2);
             
             displayTeams();
             document.getElementById('resultSection').style.display = 'block';
