@@ -593,7 +593,7 @@
                 // Empate
                 [...currentTeamA, ...currentTeamB].forEach(player => {
                     const playerIndex = players.findIndex(p => p.name === player.name);
-                    players[playerIndex].points += 1;
+                    players[playerIndex].points += 2;
                     players[playerIndex].draws += 1;
                 });
             }
