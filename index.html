@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v13 - Supabase</title>
+    <title>CAMISAS 10 v14 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -545,32 +545,10 @@
     }
   };
 
-     // Carrega dados do Supabase
-        window.loadData = async function loadData() {
-        if (!isConnected) {
-            alert('❌ Conecte-se ao Supabase primeiro!');
-            return;
-        }
-        
-        try {
-            showStatus('📥 Carregando dados...', 'loading');
-            
-            // Carrega jogadores e suas posições
-            const { data, error } = await supabase
-                .from('jogadores')
-                .select(`
-                    *,
-                    posicao (
-                        pontos,
-                        vitorias,
-                        derrotas,
-                        empates
-                    )
-                `);
 </script>
 
 
- <!--   <script>
+ <script>
         // Variáveis globais
         let supabase = null;
         let players = [];
@@ -579,70 +557,70 @@
         let isConnected = false;
 
         // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
+        //document.addEventListener('DOMContentLoaded', function() {
             // Carrega configurações salvas
-            const savedUrl = localStorage.getItem('supabaseUrl');
-            const savedKey = localStorage.getItem('supabaseKey');
+          //  const savedUrl = localStorage.getItem('supabaseUrl');
+            //const savedKey = localStorage.getItem('supabaseKey');
             
-            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
-            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+           // if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            //if (savedKey) document.getElementById('supabaseKey').value = savedKey;
             
             // Conecta automaticamente se houver configurações salvas
-            if (savedUrl && savedKey) {
-                connectSupabase();
-            }
-        });
+            //if (savedUrl && savedKey) {
+              //  connectSupabase();
+            //}
+        //});
 
         // Conecta ao Supabase
-        async function connectSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
+        //async function connectSupabase() {
+          //  const url = document.getElementById('supabaseUrl').value.trim();
+            //const key = document.getElementById('supabaseKey').value.trim();
             
-            if (!url || !key) {
-                showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
-                return;
-            }
+            //if (!url || !key) {
+              //  showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
+                //return;
+            //}
             
-            showStatus('🔄 Conectando ao Supabase...', 'loading');
+            //showStatus('🔄 Conectando ao Supabase...', 'loading');
             
-            try {
+            //try {
                 // Cria conexão com Supabase
-                supabase = window.supabase.createClient(url, key);
+              //  supabase = window.supabase.createClient(url, key);
                 
                 // Testa a conexão
-                const { data, error } = await supabase.from('jogadores').select('count').limit(1);
+                //const { data, error } = await supabase.from('jogadores').select('count').limit(1);
                 
-                if (error) {
-                    throw error;
-                }
+                //if (error) {
+                  //  throw error;
+                //}
                 
                 // Salva configurações
-                localStorage.setItem('supabaseUrl', url);
-                localStorage.setItem('supabaseKey', key);
+                //localStorage.setItem('supabaseUrl', url);
+                //localStorage.setItem('supabaseKey', key);
                 
-                isConnected = true;
-                showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
+                //isConnected = true;
+                //showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
                 
                 // Carrega dados automaticamente
-                await loadData();
+                //await loadData();
                 
-            } catch (error) {
-                console.error('Erro ao conectar:', error);
-                showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
-                isConnected = false;
-            }
-        }
+            //} catch (error) {
+              //  console.error('Erro ao conectar:', error);
+                //showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
+                //isConnected = false;
+            //}
+        //}
 
         // Exibe status da conexão
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.style.display = 'block';
-            statusDiv.textContent = message;
-            statusDiv.className = `connection-status status-${type}`;
-        }
+        //function showStatus(message, type) {
+          //  const statusDiv = document.getElementById('connectionStatus');
+            //statusDiv.style.display = 'block';
+            //statusDiv.textContent = message;
+            //statusDiv.className = `connection-status status-${type}`;
+        //}
 
         // Carrega dados do Supabase
-        window.loadData = async function loadData() {
+        window.loadData = async function {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
@@ -960,6 +938,6 @@
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
-            }-->
+            }
 </body>
 </html>
