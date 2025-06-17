@@ -500,7 +500,49 @@
     </div>
 
     <!-- Supabase JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.0/umd/supabase.min.js"></script>
+    <script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+  const supabase = createClient(
+    localStorage.getItem("supabaseUrl"),
+    localStorage.getItem("supabaseKey")
+  );
+
+  window.supabase = supabase;
+
+  // Chamada automática ao carregar
+  if (supabase) {
+    window.isConnected = true;
+    window.loadData?.();
+  }
+
+  window.connectSupabase = async function () {
+    const url = document.getElementById('supabaseUrl').value.trim();
+    const key = document.getElementById('supabaseKey').value.trim();
+
+    if (!url || !key) {
+      alert("❌ Preencha a URL e a chave do Supabase");
+      return;
+    }
+
+    const supabase = createClient(url, key);
+    localStorage.setItem("supabaseUrl", url);
+    localStorage.setItem("supabaseKey", key);
+    window.supabase = supabase;
+    window.isConnected = true;
+
+    try {
+      const { data, error } = await supabase.from("jogadores").select("*");
+      if (error) throw error;
+      alert("✅ Conectado! Jogadores encontrados: " + data.length);
+      window.loadData?.();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Erro ao conectar: " + err.message);
+    }
+  };
+</script>
+
 
     <script>
         // Variáveis globais
