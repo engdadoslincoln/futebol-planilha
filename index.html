@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v12 - Supabase</title>
+    <title>CAMISAS 10 v13 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -544,10 +544,33 @@
       console.error(err);
     }
   };
+
+     // Carrega dados do Supabase
+        window.loadData = async function loadData() {
+        if (!isConnected) {
+            alert('❌ Conecte-se ao Supabase primeiro!');
+            return;
+        }
+        
+        try {
+            showStatus('📥 Carregando dados...', 'loading');
+            
+            // Carrega jogadores e suas posições
+            const { data, error } = await supabase
+                .from('jogadores')
+                .select(`
+                    *,
+                    posicao (
+                        pontos,
+                        vitorias,
+                        derrotas,
+                        empates
+                    )
+                `);
 </script>
 
 
-    <script>
+ <!--   <script>
         // Variáveis globais
         let supabase = null;
         let players = [];
@@ -937,6 +960,6 @@
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
-            }
+            }-->
 </body>
 </html>
