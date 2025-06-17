@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v13 - Supabase</title>
+    <title>CAMISAS 10 v12 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -405,8 +405,8 @@
                     </div>
                 </div>
                 <div class="controls">
-                    <button class="btn" id="connectBtn">🔗 Conectar</button>
-                    <button class="btn btn-secondary" id="loadDataBtn">📥 Carregar Dados</button>
+                    <button class="btn" onclick="connectSupabase()">🔗 Conectar</button>
+                    <button class="btn btn-secondary" onclick="loadData()">📥 Carregar Dados</button>
                 </div>
                 <div id="connectionStatus" class="connection-status status-loading" style="display: none;">
                     Conectando...
@@ -418,7 +418,7 @@
                 <h2>👥 Gerenciar Jogadores</h2>
                 <div class="add-player-form">
                     <input type="text" id="newPlayerName" placeholder="Nome do novo jogador">
-                    <button class="btn" id="addPlayerBtn">➕ Adicionar</button>
+                    <button class="btn" onclick="addPlayer()">➕ Adicionar</button>
                 </div>
                 <div id="playersList"></div>
             </div>
@@ -442,7 +442,7 @@
             <div class="section">
                 <h2>🎲 Sorteio de Times</h2>
                 <div class="controls">
-                    <button class="btn" id="drawButton" disabled>🎯 Sortear Times</button>
+                    <button class="btn" onclick="drawTeams()" id="drawButton" disabled>🎯 Sortear Times</button>
                 </div>
                 
                 <div class="teams-container" id="teamsContainer" style="display: none;">
@@ -468,7 +468,7 @@
                         <option value="teamB">🔵 Time B Venceu</option>
                         <option value="draw">⚖️ Empate</option>
                     </select>
-                    <button class="btn" id="registerResultBtn">✅ Registrar</button>
+                    <button class="btn" onclick="registerResult()">✅ Registrar</button>
                 </div>
             </div>
 
@@ -492,16 +492,62 @@
                 </table>
                 
                 <div class="controls">
-                    <button class="btn btn-warning" id="resetDataBtn">🗑️ Resetar Dados</button>
-                    <button class="btn btn-secondary" id="exportDataBtn">📋 Exportar</button>
+                    <button class="btn btn-warning" onclick="resetAllData()">🗑️ Resetar Dados</button>
+                    <button class="btn btn-secondary" onclick="exportData()">📋 Exportar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-        
+    <!-- Supabase JS -->
+    
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+  const url = localStorage.getItem("supabaseUrl") || "";
+  const key = localStorage.getItem("supabaseKey") || "";
+
+  if (url && key) {
+    window.supabase = createClient(url, key);
+    window.isConnected = true;
+    window.loadData?.();
+  }
+
+  window.connectSupabase = async function () {
+    const urlInput = document.getElementById('supabaseUrl').value.trim();
+    const keyInput = document.getElementById('supabaseKey').value.trim();
+
+    const statusDiv = document.getElementById('connectionStatus');
+
+    if (!urlInput || !keyInput) {
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = "❌ Por favor, preencha a URL e a chave do Supabase";
+      statusDiv.className = "connection-status status-error";
+      return;
+    }
+
+    try {
+      localStorage.setItem("supabaseUrl", urlInput);
+      localStorage.setItem("supabaseKey", keyInput);
+      window.supabase = createClient(urlInput, keyInput);
+      window.isConnected = true;
+
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = "✅ Conectado com sucesso ao Supabase!";
+      statusDiv.className = "connection-status status-connected";
+
+      window.loadData?.();
+    } catch (err) {
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = "❌ Erro ao conectar: " + err.message;
+      statusDiv.className = "connection-status status-error";
+      console.error(err);
+    }
+  };
+</script>
+
+
+    <script>
         // Variáveis globais
         let supabase = null;
         let players = [];
@@ -509,15 +555,20 @@
         let currentTeamB = [];
         let isConnected = false;
 
-        // Funções principais
-        
-        // Exibe status da conexão
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.style.display = 'block';
-            statusDiv.textContent = message;
-            statusDiv.className = `connection-status status-${type}`;
-        }
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carrega configurações salvas
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            
+            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+            
+            // Conecta automaticamente se houver configurações salvas
+            if (savedUrl && savedKey) {
+                connectSupabase();
+            }
+        });
 
         // Conecta ao Supabase
         async function connectSupabase() {
@@ -533,7 +584,7 @@
             
             try {
                 // Cria conexão com Supabase
-                supabase = createClient(url, key);
+                supabase = window.supabase.createClient(url, key);
                 
                 // Testa a conexão
                 const { data, error } = await supabase.from('jogadores').select('count').limit(1);
@@ -559,8 +610,16 @@
             }
         }
 
+        // Exibe status da conexão
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            statusDiv.className = `connection-status status-${type}`;
+        }
+
         // Carrega dados do Supabase
-        async function loadData() {
+        window.loadData = async function loadData() {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
@@ -872,7 +931,12 @@
             const maxPoints = players.length > 0 ? Math.max(...players.map(p => p.points)) : 0;
             document.getElementById('leaderPoints').textContent = maxPoints;
         }
+
+        // Reseta todos os dados
+        async function resetAllData() {
+            if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
 </body>
 </html>
-        
-                
