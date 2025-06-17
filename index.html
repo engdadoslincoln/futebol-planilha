@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v14 - Supabase</title>
+    <title>CAMISAS 10 v15 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -545,6 +545,53 @@
     }
   };
 
+    // Carrega dados do Supabase
+        window.loadData = async function () {
+            if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
+            
+            try {
+                showStatus('📥 Carregando dados...', 'loading');
+                
+                // Carrega jogadores e suas posições
+                const { data, error } = await supabase
+                    .from('jogadores')
+                    .select(`
+                        *,
+                        posicao (
+                            pontos,
+                            vitorias,
+                            derrotas,
+                            empates
+                        )
+                    `);
+                
+                if (error) throw error;
+                
+                // Processa os dados
+                players = data.map(jogador => ({
+                    id: jogador.id,
+                    name: jogador.name,
+                    points: jogador.posicao?.[0]?.pontos || 0,
+                    wins: jogador.posicao?.[0]?.vitorias || 0,
+                    draws: jogador.posicao?.[0]?.empates || 0,
+                    losses: jogador.posicao?.[0]?.derrotas || 0
+                }));
+                
+                updatePlayersList();
+                updateRanking();
+                updateStats();
+                checkDrawButtonState();
+                
+                showStatus('✅ Dados carregados com sucesso!', 'connected');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
+            }
+        }
 </script>
 
 
@@ -620,52 +667,7 @@
         //}
 
         // Carrega dados do Supabase
-        window.loadData = async function {
-            if (!isConnected) {
-                alert('❌ Conecte-se ao Supabase primeiro!');
-                return;
-            }
-            
-            try {
-                showStatus('📥 Carregando dados...', 'loading');
-                
-                // Carrega jogadores e suas posições
-                const { data, error } = await supabase
-                    .from('jogadores')
-                    .select(`
-                        *,
-                        posicao (
-                            pontos,
-                            vitorias,
-                            derrotas,
-                            empates
-                        )
-                    `);
-                
-                if (error) throw error;
-                
-                // Processa os dados
-                players = data.map(jogador => ({
-                    id: jogador.id,
-                    name: jogador.name,
-                    points: jogador.posicao?.[0]?.pontos || 0,
-                    wins: jogador.posicao?.[0]?.vitorias || 0,
-                    draws: jogador.posicao?.[0]?.empates || 0,
-                    losses: jogador.posicao?.[0]?.derrotas || 0
-                }));
-                
-                updatePlayersList();
-                updateRanking();
-                updateStats();
-                checkDrawButtonState();
-                
-                showStatus('✅ Dados carregados com sucesso!', 'connected');
-                
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
-            }
-        }
+        
 
         // Adiciona novo jogador
         async function addPlayer() {
