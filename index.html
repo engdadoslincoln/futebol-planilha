@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v9 - Supabase</title>
+    <title>CAMISAS 10 v10 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -502,48 +502,7 @@
     <!-- Supabase JS -->
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.0/umd/supabase.min.js"></script>-->
     <script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-  const url = localStorage.getItem("supabaseUrl") || "";
-  const key = localStorage.getItem("supabaseKey") || "";
-
-  if (url && key) {
-    window.supabase = createClient(url, key);
-    window.isConnected = true;
-    window.loadData?.();
-  }
-
-  window.connectSupabase = async function () {
-    const urlInput = document.getElementById('supabaseUrl').value.trim();
-    const keyInput = document.getElementById('supabaseKey').value.trim();
-
-    if (!urlInput || !keyInput) {
-      const statusDiv = document.getElementById('connectionStatus');
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = "❌ Por favor, preencha a URL e a chave do Supabase";
-      statusDiv.className = "connection-status status-error";
-      return;
-    }
-
-    try {
-      localStorage.setItem("supabaseUrl", urlInput);
-      localStorage.setItem("supabaseKey", keyInput);
-      window.supabase = createClient(urlInput, keyInput);
-      window.isConnected = true;
-
-      const statusDiv = document.getElementById('connectionStatus');
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = "✅ Conectado com sucesso ao Supabase!";
-      statusDiv.className = "connection-status status-connected";
-
-      window.loadData?.();
-    } catch (err) {
-      const statusDiv = document.getElementById('connectionStatus');
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = "❌ Erro ao conectar: " + err.message;
-      statusDiv.className = "connection-status status-error";
-      console.error(err);
-    }
+  
   };
 </script>
     <script>
@@ -570,52 +529,56 @@
         });
 
         // Conecta ao Supabase
-        async function connectSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            
-            if (!url || !key) {
-                showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
-                return;
-            }
-            
-            showStatus('🔄 Conectando ao Supabase...', 'loading');
-            
-            try {
-                // Cria conexão com Supabase
-                supabase = window.supabaseJs.createClient(url, key);
-                
-                // Testa a conexão
-                const { data, error } = await supabase.from('jogadores').select('count').limit(1);
-                
-                if (error) {
-                    throw error;
-                }
-                
-                // Salva configurações
-                localStorage.setItem('supabaseUrl', url);
-                localStorage.setItem('supabaseKey', key);
-                
-                isConnected = true;
-                showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
-                
-                // Carrega dados automaticamente
-                await loadData();
-                
-            } catch (error) {
-                console.error('Erro ao conectar:', error);
-                showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
-                isConnected = false;
-            }
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+      const url = localStorage.getItem("supabaseUrl") || "";
+      const key = localStorage.getItem("supabaseKey") || "";
+    
+      if (url && key) {
+        window.supabase = createClient(url, key);
+        window.isConnected = true;
+        window.loadData?.();
+      }
+    
+      window.connectSupabase = async function () {
+        const urlInput = document.getElementById('supabaseUrl').value.trim();
+        const keyInput = document.getElementById('supabaseKey').value.trim();
+    
+        if (!urlInput || !keyInput) {
+          const statusDiv = document.getElementById('connectionStatus');
+          statusDiv.style.display = 'block';
+          statusDiv.textContent = "❌ Por favor, preencha a URL e a chave do Supabase";
+          statusDiv.className = "connection-status status-error";
+          return;
+        }
+    
+        try {
+          localStorage.setItem("supabaseUrl", urlInput);
+          localStorage.setItem("supabaseKey", keyInput);
+          window.supabase = createClient(urlInput, keyInput);
+          window.isConnected = true;
+    
+          const statusDiv = document.getElementById('connectionStatus');
+          statusDiv.style.display = 'block';
+          statusDiv.textContent = "✅ Conectado com sucesso ao Supabase!";
+          statusDiv.className = "connection-status status-connected";
+    
+          window.loadData?.();
+        } catch (err) {
+          const statusDiv = document.getElementById('connectionStatus');
+          statusDiv.style.display = 'block';
+          statusDiv.textContent = "❌ Erro ao conectar: " + err.message;
+          statusDiv.className = "connection-status status-error";
+          console.error(err);
         }
 
         // Exibe status da conexão
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.style.display = 'block';
-            statusDiv.textContent = message;
-            statusDiv.className = `connection-status status-${type}`;
-        }
+        //function showStatus(message, type) {
+           // const statusDiv = document.getElementById('connectionStatus');
+          //  statusDiv.style.display = 'block';
+          //  statusDiv.textContent = message;
+          //  statusDiv.className = `connection-status status-${type}`;
+       // }
 
         // Carrega dados do Supabase
         async function loadData() {
