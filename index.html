@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v7 - Supabase</title>
+    <title>CAMISAS 10 v9 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -500,50 +500,52 @@
     </div>
 
     <!-- Supabase JS -->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.0/umd/supabase.min.js"></script>-->
     <script type="module">
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-  const supabase = createClient(
-    localStorage.getItem("supabaseUrl"),
-    localStorage.getItem("supabaseKey")
-  );
+  const url = localStorage.getItem("supabaseUrl") || "";
+  const key = localStorage.getItem("supabaseKey") || "";
 
-  window.supabase = supabase;
-
-  // Chamada automática ao carregar
-  if (supabase) {
+  if (url && key) {
+    window.supabase = createClient(url, key);
     window.isConnected = true;
     window.loadData?.();
   }
 
   window.connectSupabase = async function () {
-    const url = document.getElementById('supabaseUrl').value.trim();
-    const key = document.getElementById('supabaseKey').value.trim();
+    const urlInput = document.getElementById('supabaseUrl').value.trim();
+    const keyInput = document.getElementById('supabaseKey').value.trim();
 
-    if (!url || !key) {
-      alert("❌ Preencha a URL e a chave do Supabase");
+    if (!urlInput || !keyInput) {
+      const statusDiv = document.getElementById('connectionStatus');
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = "❌ Por favor, preencha a URL e a chave do Supabase";
+      statusDiv.className = "connection-status status-error";
       return;
     }
 
-    const supabase = createClient(url, key);
-    localStorage.setItem("supabaseUrl", url);
-    localStorage.setItem("supabaseKey", key);
-    window.supabase = supabase;
-    window.isConnected = true;
-
     try {
-      const { data, error } = await supabase.from("jogadores").select("*");
-      if (error) throw error;
-      alert("✅ Conectado! Jogadores encontrados: " + data.length);
+      localStorage.setItem("supabaseUrl", urlInput);
+      localStorage.setItem("supabaseKey", keyInput);
+      window.supabase = createClient(urlInput, keyInput);
+      window.isConnected = true;
+
+      const statusDiv = document.getElementById('connectionStatus');
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = "✅ Conectado com sucesso ao Supabase!";
+      statusDiv.className = "connection-status status-connected";
+
       window.loadData?.();
     } catch (err) {
+      const statusDiv = document.getElementById('connectionStatus');
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = "❌ Erro ao conectar: " + err.message;
+      statusDiv.className = "connection-status status-error";
       console.error(err);
-      alert("❌ Erro ao conectar: " + err.message);
     }
   };
 </script>
-
-
     <script>
         // Variáveis globais
         let supabase = null;
