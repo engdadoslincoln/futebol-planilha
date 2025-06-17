@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v4 - Supabase</title>
+    <title>CAMISAS 10 v5 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -539,7 +539,7 @@
             
             try {
                 // Cria conexão com Supabase
-                supabase = window.supabase.createClient(url, key);
+                supabase = window.supabaseJs.createClient(url, key);
                 
                 // Testa a conexão
                 const { data, error } = await supabase.from('jogadores').select('count').limit(1);
