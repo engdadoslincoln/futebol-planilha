@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v3 - Supabase</title>
+    <title>CAMISAS 10 v4 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -525,7 +525,45 @@
             }
         });
 
-        
+        // Conecta ao Supabase
+        async function connectSupabase() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            if (!url || !key) {
+                showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
+                return;
+            }
+            
+            showStatus('🔄 Conectando ao Supabase...', 'loading');
+            
+            try {
+                // Cria conexão com Supabase
+                supabase = window.supabase.createClient(url, key);
+                
+                // Testa a conexão
+                const { data, error } = await supabase.from('jogadores').select('count').limit(1);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Salva configurações
+                localStorage.setItem('supabaseUrl', url);
+                localStorage.setItem('supabaseKey', key);
+                
+                isConnected = true;
+                showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
+                
+                // Carrega dados automaticamente
+                await loadData();
+                
+            } catch (error) {
+                console.error('Erro ao conectar:', error);
+                showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
+                isConnected = false;
+            }
+        }
 
         // Exibe status da conexão
         function showStatus(message, type) {
@@ -848,4 +886,29 @@
             const maxPoints = players.length > 0 ? Math.max(...players.map(p => p.points)) : 0;
             document.getElementById('leaderPoints').textContent = maxPoints;
         }
+
+        // Reseta todos os dados
+        async function resetAllData() {
+            if (!confirm('Tem certeza que deseja resetar todos os dados? Esta ação é irreversível.')) {
+                return;
+            }
+
+            try {
+                // Apaga dados de posicao
+                let { error: error1 } = await supabase.from('posicao').delete().neq('idjogador', 0);
+                if (error1) throw error1;
+
+                // Apaga dados de jogadores
+                let { error: error2 } = await supabase.from('jogadores').delete().neq('id', 0);
+                if (error2) throw error2;
+
+                await loadData();
+                alert('✅ Dados resetados com sucesso!');
+            } catch (error) {
+                console.error('Erro ao resetar:', error);
+                alert(`❌ Erro ao resetar: ${error.message}`);
+            }
+        }
     </script>
+</body>
+</html>
