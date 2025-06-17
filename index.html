@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v16 - Supabase</title>
+    <title>CAMISAS 10 v17 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -510,7 +510,7 @@
   if (url && key) {
     window.supabase = createClient(url, key);
     window.isConnected = true;
-    window.loadData?.();
+    //window.loadData?.();
   }
 
   window.connectSupabase = async function () {
@@ -536,7 +536,51 @@
       statusDiv.textContent = "✅ Conectado com sucesso ao Supabase!";
       statusDiv.className = "connection-status status-connected";
 
-      window.loadData?.();
+      //window.loadData?.();
+         if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
+            
+            try {
+                showStatus('📥 Carregando dados...', 'loading');
+                
+                // Carrega jogadores e suas posições
+                const { data, error } = await supabase
+                    .from('jogadores')
+                    .select(`
+                        *,
+                        posicao (
+                            pontos,
+                            vitorias,
+                            derrotas,
+                            empates
+                        )
+                    `);
+                
+                if (error) throw error;
+                
+                // Processa os dados
+                players = data.map(jogador => ({
+                    id: jogador.id,
+                    name: jogador.name,
+                    points: jogador.posicao?.[0]?.pontos || 0,
+                    wins: jogador.posicao?.[0]?.vitorias || 0,
+                    draws: jogador.posicao?.[0]?.empates || 0,
+                    losses: jogador.posicao?.[0]?.derrotas || 0
+                }));
+                
+                updatePlayersList();
+                updateRanking();
+                updateStats();
+                checkDrawButtonState();
+                
+                showStatus('✅ Dados carregados com sucesso!', 'connected');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
+            }
     } catch (err) {
       statusDiv.style.display = 'block';
       statusDiv.textContent = "❌ Erro ao conectar: " + err.message;
@@ -622,7 +666,7 @@
 
         // Carrega dados do Supabase
          // Carrega dados do Supabase
-        window.loadData = async function () {
+            window.loadData = async function () {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
