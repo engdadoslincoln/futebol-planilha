@@ -525,45 +525,7 @@
             }
         });
 
-        // Conecta ao Supabase
-        async function connectSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            
-            if (!url || !key) {
-                showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
-                return;
-            }
-            
-            showStatus('🔄 Conectando ao Supabase...', 'loading');
-            
-            try {
-                // Cria conexão com Supabase
-                supabase = window.supabase.createClient(url, key);
-                
-                // Testa a conexão
-                const { data, error } = await supabase.from('jogadores').select('count').limit(1);
-                
-                if (error) {
-                    throw error;
-                }
-                
-                // Salva configurações
-                localStorage.setItem('supabaseUrl', url);
-                localStorage.setItem('supabaseKey', key);
-                
-                isConnected = true;
-                showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
-                
-                // Carrega dados automaticamente
-                await loadData();
-                
-            } catch (error) {
-                console.error('Erro ao conectar:', error);
-                showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
-                isConnected = false;
-            }
-        }
+        
 
         // Exibe status da conexão
         function showStatus(message, type) {
@@ -886,4 +848,4 @@
             const maxPoints = players.length > 0 ? Math.max(...players.map(p => p.points)) : 0;
             document.getElementById('leaderPoints').textContent = maxPoints;
         }
-
+    </script>
