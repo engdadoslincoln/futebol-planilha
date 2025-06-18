@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v19 - Supabase</title>
+    <title>CAMISAS 10 v20 - Supabase</title>
     <style>
         * {
             margin: 0;
@@ -502,6 +502,11 @@
     <!-- Supabase JS -->
     
 <script type="module">
+let players = [];
+let currentTeamA = [];
+let currentTeamB = [];
+let isConnected = false;
+    
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
   const url = localStorage.getItem("supabaseUrl") || "";
@@ -556,7 +561,7 @@
                 const { data, error } = await supabase
                     .from('jogadores')
                     .select(`
-                        *,
+                        name,
                         posicao (
                             pontos,
                             vitorias,
