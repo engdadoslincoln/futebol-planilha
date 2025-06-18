@@ -702,7 +702,7 @@
             // Atualiza a interface do usuário
             window.updatePlayersList();
             window.checkDrawButtonState(); // Verifica se a mudança afeta o botão de sorteio
-            alert(`✅ Status de ${currentPlayer.name} atualizado para ${newStatus ? 'Ativo' : 'Inativo'} para o sorteio.`);
+            alert(`✅ ${currentPlayer.name} vai ${newStatus ? 'Vai jogar' : 'Não vai jogar'}.`);
 
         } catch (error) {
             console.error('Erro ao atualizar status do jogador:', error);
