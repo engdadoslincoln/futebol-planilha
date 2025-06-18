@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAMISAS 10 v20 - Supabase</title>
+    <title>CAMISAS 10</title>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -387,12 +388,12 @@
     <div class="container">
         <div class="header">
             <h1>⚽ Liga Individual - CAMISAS 10</h1>
-            <p>Integrado com Supabase</p>
+            <p>Que vença o melhor!!</p>
         </div>
         
         <div class="content">
             <!-- Configuração do Supabase -->
-            <div class="section config-section">
+            <div class="section config-section" style="display:none">
                 <h2>⚙️ Configuração do Supabase</h2>
                 <div class="config-form">
                     <div class="config-input">
@@ -491,7 +492,7 @@
                     </tbody>
                 </table>
                 
-                <div class="controls">
+                <div class="controls" style="display:none">
                     <button class="btn btn-warning" onclick="resetAllData()">🗑️ Resetar Dados</button>
                     <button class="btn btn-secondary" onclick="exportData()">📋 Exportar</button>
                 </div>
@@ -501,191 +502,86 @@
 
     <!-- Supabase JS -->
     
-<script type="module">
-let players = [];
-let currentTeamA = [];
-let currentTeamB = [];
-let isConnected = false;
-    
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-  const url = localStorage.getItem("supabaseUrl") || "";
-  const key = localStorage.getItem("supabaseKey") || "";
-
- function showStatus(message, type) {
-        const statusDiv = document.getElementById('connectionStatus');
-        statusDiv.style.display = 'block';
-        statusDiv.textContent = message;
-        statusDiv.className = `connection-status status-${type}`;
-    }
-
-  if (url && key) {
-    window.supabase = createClient(url, key);
-    window.isConnected = true;
-    window.loadData?.();
-  }
-
-  window.connectSupabase = async function () {
-    const urlInput = document.getElementById('supabaseUrl').value.trim();
-    const keyInput = document.getElementById('supabaseKey').value.trim();
-
-    const statusDiv = document.getElementById('connectionStatus');
-
-    if (!urlInput || !keyInput) {
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = "❌ Por favor, preencha a URL e a chave do Supabase";
-      statusDiv.className = "connection-status status-error";
-      return;
-    }
-
-    try {
-      localStorage.setItem("supabaseUrl", urlInput);
-      localStorage.setItem("supabaseKey", keyInput);
-      window.supabase = createClient(urlInput, keyInput);
-      window.isConnected = true;
-
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = "✅ Conectado com sucesso ao Supabase!";
-      statusDiv.className = "connection-status status-connected";
-
-      //window.loadData?.();
-         if (!isConnected) {
-                alert('❌ Conecte-se ao Supabase primeiro!');
-                return;
-            }
-            
-            try {
-                showStatus('📥 Carregando dados...', 'loading');
-                
-                // Carrega jogadores e suas posições
-                const { data, error } = await supabase
-                    .from('jogadores')
-                    .select(`
-                        name,
-                        posicao (
-                            pontos,
-                            vitorias,
-                            derrotas,
-                            empates
-                        )
-                    `);
-                
-                if (error) throw error;
-                
-                // Processa os dados
-                players = data.map(jogador => ({
-                    id: jogador.id,
-                    name: jogador.name,
-                    points: jogador.posicao?.[0]?.pontos || 0,
-                    wins: jogador.posicao?.[0]?.vitorias || 0,
-                    draws: jogador.posicao?.[0]?.empates || 0,
-                    losses: jogador.posicao?.[0]?.derrotas || 0
-                }));
-                
-                updatePlayersList();
-                updateRanking();
-                updateStats();
-                checkDrawButtonState();
-                
-                showStatus('✅ Dados carregados com sucesso!', 'connected');
-                
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
-            }
-    } catch (err) {
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = "❌ Erro ao conectar: " + err.message;
-      statusDiv.className = "connection-status status-error";
-      console.error(err);
-    }
-  };
-
-   
-</script>
-
-
- <script>
+<script>
         // Variáveis globais
         let supabase = null;
         let players = [];
         let currentTeamA = [];
         let currentTeamB = [];
         let isConnected = false;
-
+        
         // Inicialização
-        //document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             // Carrega configurações salvas
-          //  const savedUrl = localStorage.getItem('supabaseUrl');
-            //const savedKey = localStorage.getItem('supabaseKey');
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
             
-           // if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
-            //if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
             
             // Conecta automaticamente se houver configurações salvas
-            //if (savedUrl && savedKey) {
-              //  connectSupabase();
-            //}
-        //});
+            if (savedUrl && savedKey) {
+                window.connectSupabase(); // Call the globally accessible function
+            }
+        });
 
         // Conecta ao Supabase
-        //async function connectSupabase() {
-          //  const url = document.getElementById('supabaseUrl').value.trim();
-            //const key = document.getElementById('supabaseKey').value.trim();
+        window.connectSupabase = async function() {
+           const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
             
-            //if (!url || !key) {
-              //  showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
-                //return;
-            //}
+            if (!url || !key) {
+                window.showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
+                return;
+            }
             
-            //showStatus('🔄 Conectando ao Supabase...', 'loading');
+            window.showStatus('🔄 Conectando ao Supabase...', 'loading');
             
-            //try {
+            try {
                 // Cria conexão com Supabase
-              //  supabase = window.supabase.createClient(url, key);
+                supabase = window.supabase.createClient(url, key); // Ensure window.supabase is used
                 
                 // Testa a conexão
-                //const { data, error } = await supabase.from('jogadores').select('count').limit(1);
+                const { data, error } = await supabase.from('jogadores').select('count').limit(1);
                 
-                //if (error) {
-                  //  throw error;
-                //}
+                if (error) {
+                    throw error;
+                }
                 
                 // Salva configurações
-                //localStorage.setItem('supabaseUrl', url);
-                //localStorage.setItem('supabaseKey', key);
+                localStorage.setItem('supabaseUrl', url);
+                localStorage.setItem('supabaseKey', key);
                 
-                //isConnected = true;
-                //showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
+                isConnected = true;
+                window.showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
                 
                 // Carrega dados automaticamente
-                //await loadData();
+                await window.loadData(); // Call the globally accessible function
                 
-            //} catch (error) {
-              //  console.error('Erro ao conectar:', error);
-                //showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
-                //isConnected = false;
-            //}
-        //}
+            } catch (error) {
+               console.error('Erro ao conectar:', error);
+                window.showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
+                isConnected = false;
+            }
+        }; // Semicolon here
 
         // Exibe status da conexão
-       // function showStatus(message, type) {
-           // const statusDiv = document.getElementById('connectionStatus');
-         //   statusDiv.style.display = 'block';
-          //  statusDiv.textContent = message;
-         //   statusDiv.className = `connection-status status-${type}`;
-       // }
+        window.showStatus = function(message, type) { // Make showStatus global too
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            statusDiv.className = `connection-status status-${type}`;
+       };
 
-        // Carrega dados do Supabase
          // Carrega dados do Supabase
-            window.loadData = async function () {
+        window.loadData = async function () {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
             }
             
             try {
-                showStatus('📥 Carregando dados...', 'loading');
+                window.showStatus('📥 Carregando dados...', 'loading');
                 
                 // Carrega jogadores e suas posições
                 const { data, error } = await supabase
@@ -712,21 +608,21 @@ let isConnected = false;
                     losses: jogador.posicao?.[0]?.derrotas || 0
                 }));
                 
-                updatePlayersList();
-                updateRanking();
-                updateStats();
-                checkDrawButtonState();
+                window.updatePlayersList();
+                window.updateRanking();
+                window.updateStats();
+                window.checkDrawButtonState();
                 
-                showStatus('✅ Dados carregados com sucesso!', 'connected');
+                window.showStatus('✅ Dados carregados com sucesso!', 'connected');
                 
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
+                window.showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
             }
-        }
+        }; // Semicolon here
 
         // Adiciona novo jogador
-        async function addPlayer() {
+        window.addPlayer = async function() {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
@@ -756,7 +652,7 @@ let isConnected = false;
                 const { error: posicaoError } = await supabase
                     .from('posicao')
                     .insert([{
-                        idjogador: jogadorId,
+                        idJogador: jogadorId,
                         pontos: 0,
                         vitorias: 0,
                         derrotas: 0,
@@ -766,32 +662,62 @@ let isConnected = false;
                 if (posicaoError) throw posicaoError;
                 
                 document.getElementById('newPlayerName').value = '';
-                await loadData();
+                await window.loadData();
                 alert('✅ Jogador adicionado com sucesso!');
                 
             } catch (error) {
                 console.error('Erro ao adicionar jogador:', error);
                 alert(`❌ Erro ao adicionar jogador: ${error.message}`);
             }
-        }
+        }; // Semicolon here
 
         // Atualiza lista de jogadores
-        function updatePlayersList() {
+        window.updatePlayersList = function() {
             const container = document.getElementById('playersList');
             if (players.length === 0) {
                 container.innerHTML = '<p>Nenhum jogador cadastrado. Adicione jogadores para começar!</p>';
                 return;
             }
             
+			// Cria um array de strings HTML para cada jogador
+            const playerDivs = players.map(p => `
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px; /* Espaço entre o ícone e o nome */
+                    background-color: #f0f0f0; /* Fundo cinza claro */
+                    padding: 8px 12px;
+                    border-radius: 5px;
+                    margin-bottom: 5px; /* Espaço entre os jogadores */
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Sombra suave */
+                ">
+                    <span style="font-size: 1.2em;">👤</span> <span>${p.name}</span>
+                </div>
+            `).join(''); // Junta todas as strings HTML
+            
             container.innerHTML = `
-                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <strong>Jogadores cadastrados:</strong> ${players.map(p => p.name).join(', ')}
+                <div style="
+                    background: white;
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                ">
+                    <strong>Jogadores cadastrados:</strong>
+                    <div style="
+                        margin-top: 10px; /* Espaço entre o título e a lista de jogadores */
+                        display: flex;
+                        flex-wrap: wrap; /* Permite quebrar linha para jogadores */
+                        gap: 10px; /* Espaço entre os blocos de jogador */
+                    ">
+                        ${playerDivs}
+                    </div>
                 </div>
             `;
-        }
+           
+        }; // Semicolon here
 
         // Verifica estado do botão de sorteio
-        function checkDrawButtonState() {
+        window.checkDrawButtonState = function() {
             const drawButton = document.getElementById('drawButton');
             
             if (players.length < 12) {
@@ -801,10 +727,10 @@ let isConnected = false;
                 drawButton.disabled = false;
                 drawButton.innerHTML = '🎯 Sortear Times';
             }
-        }
+        }; // Semicolon here
 
         // Sorteia times
-        function drawTeams() {
+        window.drawTeams = function() {
             if (players.length < 12) {
                 alert(`❌ É necessário ter pelo menos 12 jogadores para sortear os times!\nAtualmente você tem apenas ${players.length} jogadores.`);
                 return;
@@ -820,12 +746,15 @@ let isConnected = false;
             currentTeamA = shuffled.slice(0, playersPerTeam);
             currentTeamB = shuffled.slice(playersPerTeam, playersPerTeam * 2);
             
-            displayTeams();
+            window.displayTeams();
             document.getElementById('resultSection').style.display = 'block';
-        }
+			
+			// Desativa o botão de sorteio
+            document.getElementById('drawButton').disabled = true;
+        }; // Semicolon here
 
         // Exibe times sorteados
-        function displayTeams() {
+        window.displayTeams = function() {
             const teamAList = document.getElementById('teamA');
             const teamBList = document.getElementById('teamB');
             const container = document.getElementById('teamsContainer');
@@ -846,10 +775,10 @@ let isConnected = false;
             });
             
             container.style.display = 'grid';
-        }
+        }; // Semicolon here
 
         // Registra resultado do jogo
-        async function registerResult() {
+        window.registerResult = async function() {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
@@ -874,7 +803,7 @@ let isConnected = false;
                     // Time A venceu
                     currentTeamA.forEach(player => {
                         updates.push({
-                            idjogador: player.id,
+                            idJogador: player.id,
                             pontos: player.points + 3,
                             vitorias: player.wins + 1,
                             derrotas: player.losses,
@@ -883,7 +812,7 @@ let isConnected = false;
                     });
                     currentTeamB.forEach(player => {
                         updates.push({
-                            idjogador: player.id,
+                            idJogador: player.id,
                             pontos: player.points,
                             vitorias: player.wins,
                             derrotas: player.losses + 1,
@@ -894,7 +823,7 @@ let isConnected = false;
                     // Time B venceu
                     currentTeamB.forEach(player => {
                         updates.push({
-                            idjogador: player.id,
+                            idJogador: player.id,
                             pontos: player.points + 3,
                             vitorias: player.wins + 1,
                             derrotas: player.losses,
@@ -903,7 +832,7 @@ let isConnected = false;
                     });
                     currentTeamA.forEach(player => {
                         updates.push({
-                            idjogador: player.id,
+                            idJogador: player.id,
                             pontos: player.points,
                             vitorias: player.wins,
                             derrotas: player.losses + 1,
@@ -914,7 +843,7 @@ let isConnected = false;
                     // Empate
                     [...currentTeamA, ...currentTeamB].forEach(player => {
                         updates.push({
-                            idjogador: player.id,
+                            idJogador: player.id,
                             pontos: player.points + 2,
                             vitorias: player.wins,
                             derrotas: player.losses,
@@ -933,13 +862,13 @@ let isConnected = false;
                             derrotas: update.derrotas,
                             empates: update.empates
                         })
-                        .eq('idjogador', update.idjogador);
+                        .eq('idJogador', update.idJogador);
                     
                     if (error) throw error;
                 }
                 
                 // Recarrega dados e reseta interface
-                await loadData();
+                await window.loadData();
                 
                 document.getElementById('gameResult').value = '';
                 document.getElementById('resultSection').style.display = 'none';
@@ -949,14 +878,17 @@ let isConnected = false;
                 
                 alert('✅ Resultado registrado com sucesso!');
                 
+				// Reativa o botão de sorteio
+                document.getElementById('drawButton').disabled = false;
+				
             } catch (error) {
                 console.error('Erro ao registrar resultado:', error);
                 alert(`❌ Erro ao registrar resultado: ${error.message}`);
             }
-        }
+        }; // Semicolon here
 
         // Atualiza ranking
-        function updateRanking() {
+        window.updateRanking = function() {
             // Ordena jogadores por pontos (decrescente)
             const sortedPlayers = [...players].sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
@@ -981,21 +913,39 @@ let isConnected = false;
                 `;
                 tbody.appendChild(row);
             });
-        }
+        }; // Semicolon here
 
         // Atualiza estatísticas
-        function updateStats() {
+        window.updateStats = function() {
             document.getElementById('totalPlayers').textContent = players.length;
             
             const maxPoints = players.length > 0 ? Math.max(...players.map(p => p.points)) : 0;
             document.getElementById('leaderPoints').textContent = maxPoints;
-        }
+        }; // Semicolon here
 
         // Reseta todos os dados
-        async function resetAllData() {
+        window.resetAllData = async function() {
             if (!isConnected) {
                 alert('❌ Conecte-se ao Supabase primeiro!');
                 return;
             }
+            try {
+                // Apaga dados de posicao
+                let { error: error1 } = await supabase.from('posicao').delete().neq('idJogador', 0);
+                if (error1) throw error1;
+
+                // Apaga dados de jogadores
+                let { error: error2 } = await supabase.from('jogadores').delete().neq('id', 0);
+                if (error2) throw error2;
+
+                await loadData();
+                alert('✅ Dados resetados com sucesso!');
+            } catch (error) {
+                console.error('Erro ao resetar:', error);
+                alert(`❌ Erro ao resetar: ${error.message}`);
+            }
+        }; // Semicolon here
+        // Add window.exportData if you have this function
+    </script>
 </body>
 </html>
