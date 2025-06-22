@@ -1208,7 +1208,7 @@
                     currentTeamB.forEach(player => {
                         updates.push({
                             idJogador: player.id,
-                            pontos: player.points,
+                            pontos: player.points + 1,
                             vitorias: player.wins,
                             derrotas: player.losses + 1,
                             empates: player.draws
@@ -1227,7 +1227,7 @@
                     currentTeamA.forEach(player => {
                         updates.push({
                             idJogador: player.id,
-                            pontos: player.points,
+                            pontos: player.points + 1,
                             vitorias: player.wins,
                             derrotas: player.losses + 1,
                             empates: player.draws
