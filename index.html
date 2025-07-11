@@ -1292,10 +1292,9 @@
 
         // Atualiza ranking (Classificação Geral) - NOVO MODELO: Tabela Clean
         window.updateRanking = function() {
-
-	    const filteredPlayers = players.filter(player => player.name.toLowerCase() !== 'avulso');
-		
-            const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+            const sortedPlayers = [...players]
+		.filter(player => !player.name.toLowerCase().includes('avulso'))
+		.sort((a, b) => {
                 if (b.points !== a.points) return b.points - a.points;
                 if (b.wins !== a.wins) return b.wins - a.wins;
                 return b.draws - a.draws;
