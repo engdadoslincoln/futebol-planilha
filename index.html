@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -245,8 +244,7 @@
             border-radius: 5px;
             font-weight: bold;
             text-align: center;
-            /* Removido display: none; para sempre mostrar o status */
-            display: block; /* Mudar para block para que seja sempre visível */
+            display: none;
         }
 
         .status-loading {
@@ -528,7 +526,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <header class="header">
@@ -546,8 +543,8 @@
                     <input type="text" id="newPlayerName" placeholder="Nome do jogador">
                 </div>
                 <button class="btn" onclick="window.addPlayer()">Adicionar Jogador</button>
-
-                <h2 style="margin-top: 30px;">👥 Jogadores Cadastrados</h2>
+                
+                <h2 style="margin-top: 30px;">👥 Jogadores</h2>
                 <div id="playersList">
                     <p>Nenhum jogador cadastrado.</p>
                 </div>
@@ -559,12 +556,12 @@
                     <div class="team-fixed-card">
                         <h3>Jogadores Fixos - Time A</h3>
                         <ul id="fixedTeamA_list">
-                        </ul>
+                            </ul>
                     </div>
                     <div class="team-fixed-card">
                         <h3>Jogadores Fixos - Time B</h3>
                         <ul id="fixedTeamB_list">
-                        </ul>
+                            </ul>
                     </div>
                 </div>
 
@@ -601,7 +598,7 @@
             <section class="card" id="reservesSection" style="display: none;">
                 <h2>👥 Jogadores no Banco / Não Selecionados</h2>
                 <ul id="reservesList">
-                </ul>
+                    </ul>
             </section>
 
             <section class="card" id="rankingSection">
@@ -618,9 +615,7 @@
                         </tr>
                     </thead>
                     <tbody id="rankingTableBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #777;">Carregando classificação...</td>
-                        </tr>
+                        <tr><td colspan="6" style="text-align: center; color: #777;">Carregando classificação...</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -639,238 +634,713 @@
                 </div>
             </section>
 
-            <div id="connectionStatus" class="connection-status"></div>
-            <section class="card reset-button-container" id="dataManagementSection" style="display:none">
+            <section class="card" id="connectionSection" style="display:none">
+                <h2>🌐 Conexão Supabase</h2>
+                <div class="form-group">
+                    <label for="supabaseUrl">URL do Projeto Supabase:</label>
+                    <input type="text" id="supabaseUrl" placeholder="Ex: https://xyz.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label for="supabaseKey">Chave Pública (Anon Key):</label>
+                    <input type="password" id="supabaseKey" placeholder="Sua chave anon de projeto">
+                </div>
+                <button class="btn" onclick="window.connectSupabase()">Conectar</button>
+                <div id="connectionStatus" class="connection-status"></div>
+            </section>
+
+            <section class="card reset-button-container" id="dataManagementSection">
                 <h2>⚠️ Gerenciamento de Dados</h2>
                 <button class="btn btn-danger" onclick="window.resetAllData()">Resetar Todos os Dados</button>
             </section>
         </main>
     </div>
 
-   <script>
-    // ================================
-    // CONFIGURAÇÃO SUPABASE (FRONTEND)
-    // ================================
-    const SUPABASE_URL = 'https://ofdaxmhklseogkfsvmdx.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mZGF4bWhrbHNlb2drZnN2bWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4NDMxODIsImV4cCI6MjA2NTQxOTE4Mn0.r1tK0_1QTC5ALqDkMhrvYWmRalltdH12M9sRmdUOgfw';
-
-    let client = null;
-    let players = [];
-    let currentTeamA = [];
-    let currentTeamB = [];
-    let fixedTeamA = [];
-    let fixedTeamB = [];
-    let isConnected = false;
-
-    // ================================
-    // INICIALIZAÇÃO
-    // ================================
-    document.addEventListener('DOMContentLoaded', async function () {
-        console.log("Página carregada. Iniciando conexão segura...");
-        await connectSupabase();
-
-        restoreDrawFromLocalStorage();
-    });
-
-    // ================================
-    // CONEXÃO SUPABASE (APENAS PUBLISHABLE)
-    // ================================
-    async function connectSupabase() {
-        try {
-            if (!window.supabase) {
-                throw new Error("SDK Supabase não carregado.");
+    <script>
+        // Variáveis globais
+        let client = null;
+        let players = [];
+        let currentTeamA = [];
+        let currentTeamB = [];
+        let fixedTeamA = []; 
+        let fixedTeamB = []; 
+        let isConnected = false;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            
+            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+            
+            if (savedUrl && savedKey) {
+                window.connectSupabase(); 
             }
 
-            client = window.supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_PUBLISHABLE_KEY,
-                {
-                    auth: {
-                        persistSession: false
-                    }
+            // --- ESTE BLOCO CARREGA OS TIMES SORTEADOS DO localStorage AO CARREGAR A PÁGINA ---
+            const savedTeamA = localStorage.getItem('savedCurrentTeamA');
+            const savedTeamB = localStorage.getItem('savedCurrentTeamB');
+            const savedReserves = localStorage.getItem('savedPlayersNotInGame');
+            const hasDrawn = localStorage.getItem('hasDrawnTeams');
+
+            if (savedTeamA && savedTeamB && hasDrawn === 'true') {
+                currentTeamA = JSON.parse(savedTeamA);
+                currentTeamB = JSON.parse(savedTeamB);
+                const playersNotInGame = savedReserves ? JSON.parse(savedReserves) : [];
+
+                window.displayTeams(playersNotInGame);
+                document.getElementById('resultSection').style.display = 'block';
+                document.getElementById('drawButton').disabled = true;
+                document.getElementById('drawButton').innerHTML = '🎯 Times Sorteados';
+            }
+            // --- FIM DO BLOCO DE CARREGAMENTO DO localStorage ---
+        });
+
+        // Conecta ao Supabase
+        window.connectSupabase = async function() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            console.log("Tentando conectar com URL:", url, "e Chave (parcial):", key ? key.substring(0, 5) + '...' : 'N/A'); 
+
+            if (!url || !key) {
+                window.showStatus('❌ Por favor, preencha a URL e a chave do Supabase', 'error');
+                return;
+            }
+            
+            window.showStatus('🔄 Conectando ao Supabase...', 'loading');
+            
+            try {
+                client = window.supabase.createClient(url, key); 
+                
+                const { data, error } = await client.from('jogadores').select('count').limit(1);
+                
+                if (error) {
+                    throw error;
                 }
+                
+                localStorage.setItem('supabaseUrl', url);
+                localStorage.setItem('supabaseKey', key);
+                
+                isConnected = true;
+                window.showStatus('✅ Conectado com sucesso ao Supabase!', 'connected');
+                
+                await window.loadData(); 
+                
+            } catch (error) {
+                console.error('Erro ao conectar:', error);
+                window.showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
+                isConnected = false;
+            }
+        };
+
+        // Exibe status da conexão
+        window.showStatus = function(message, type) { 
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.textContent = message;
+            statusDiv.className = `connection-status status-${type}`;
+        };
+
+        // Carrega dados do Supabase
+        window.loadData = async function () {
+            if (!isConnected) {
+                console.warn("loadData() chamado, mas não conectado ao Supabase.");
+                return;
+            }
+            
+            try {
+                window.showStatus('📥 Carregando dados...', 'loading');
+                
+                console.log("Iniciando carregamento de dados dos jogadores do Supabase...");
+
+                const { data, error } = await client
+                    .from('jogadores')
+                    .select(`
+                        id,
+                        name,
+                        active_for_draw,
+                        posicao (
+                            pontos,
+                            vitorias,
+                            derrotas,
+                            empates
+                        )
+                    `);
+                
+                if (error) {
+                    console.error("Erro ao buscar dados dos jogadores do Supabase:", error);
+                    throw error;
+                }
+                
+                console.log("Dados brutos recebidos do Supabase:", data); 
+
+                players = data.map(jogador => ({
+                    id: jogador.id,
+                    name: jogador.name,
+                    points: jogador.posicao?.[0]?.pontos || 0,
+                    wins: jogador.posicao?.[0]?.vitorias || 0,
+                    draws: jogador.posicao?.[0]?.empates || 0,
+                    losses: jogador.posicao?.[0]?.derrotas || 0,
+                    activeForDraw: jogador.active_for_draw !== undefined ? jogador.active_for_draw : true
+                }));
+                
+                console.log("Array 'players' após processamento:", players); 
+
+                window.updatePlayersList();
+                window.updateRanking();
+                window.updateStats();
+                window.checkDrawButtonState(); 
+                
+                window.showStatus('✅ Dados carregados com sucesso!', 'connected');
+                
+            } catch (error) {
+                console.error('Erro geral na função loadData:', error);
+                window.showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
+            }
+        };
+
+        // Adiciona novo jogador
+        window.addPlayer = async function() {
+            if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
+            
+            const name = document.getElementById('newPlayerName').value.trim();
+            if (!name) {
+                alert('❌ Digite o nome do jogador!');
+                return;
+            }
+            
+            try {
+                const { data: jogadorData, error: jogadorError } = await client
+                    .from('jogadores')
+                    .insert([{ 
+                        name: name,
+                        dtRegistro: new Date().toISOString(),
+                        active_for_draw: true 
+                    }])
+                    .select();
+                
+                if (jogadorError) throw jogadorError;
+                
+                const jogadorId = jogadorData[0].id;
+                
+                const { error: posicaoError } = await client
+                    .from('posicao')
+                    .insert([{
+                        idJogador: jogadorId,
+                        pontos: 0,
+                        vitorias: 0,
+                        derrotas: 0,
+                        empates: 0
+                    }]);
+                
+                if (posicaoError) throw posicaoError;
+                
+                document.getElementById('newPlayerName').value = '';
+                await window.loadData(); 
+                alert('✅ Jogador adicionado com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao adicionar jogador:', error);
+                alert(`❌ Erro ao adicionar jogador: ${error.message}`);
+            }
+        };
+
+        // Alterna o status de um jogador para o sorteio
+        window.togglePlayerActiveStatus = async function(playerId) {
+            if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
+
+            const playerIndex = players.findIndex(p => p.id === playerId);
+            if (playerIndex === -1) return;
+
+            const currentPlayer = players[playerIndex];
+            const newStatus = !currentPlayer.activeForDraw; 
+
+            try {
+                const { error } = await client
+                    .from('jogadores')
+                    .update({ active_for_draw: newStatus }) 
+                    .eq('id', playerId);
+
+                if (error) throw error;
+
+                players[playerIndex].activeForDraw = newStatus;
+                
+                window.updatePlayersList();
+                window.checkDrawButtonState(); 
+                alert(`✅ Aval da mulher para ${currentPlayer.name}, ${newStatus ? 'LIBERADO' : 'NÃO LIBERADO'}!.`);
+
+            } catch (error) {
+                console.error('Erro ao atualizar status do jogador:', error);
+                alert(`❌ Erro ao atualizar status: ${error.message}`);
+            }
+        };
+
+        // Atualiza lista de jogadores
+        window.updatePlayersList = function() {
+            const container = document.getElementById('playersList');
+            if (players.length === 0) {
+                console.log("Nenhum jogador no array 'players'. Exibindo mensagem padrão."); 
+                container.innerHTML = '<p>Nenhum jogador cadastrado. Adicione jogadores para começar!</p>';
+                return;
+            }
+            
+            console.log("Atualizando lista de jogadores. Total de jogadores:", players.length); 
+
+            const playerDivs = players.map(p => {
+                const isFixedInA = fixedTeamA.some(fp => fp.id === p.id);
+                const isFixedInB = fixedTeamB.some(fp => fp.id === p.id);
+                const isDisabled = isFixedInA || isFixedInB; 
+
+                return `
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 8px;
+                        background-color: ${p.activeForDraw ? '#e6ffe6' : '#ffe6e6'};
+                        border: 1px solid ${p.activeForDraw ? '#4CAF50' : '#f44336'};
+                        padding: 8px 12px;
+                        border-radius: 5px;
+                        margin-bottom: 5px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                        opacity: ${isDisabled ? '0.6' : '1'}; 
+                        flex: 1 1 auto;
+                        min-width: 250px;
+                    ">
+                        <div>
+                            <span style="font-size: 1.2em;">${p.activeForDraw ? '👤' : '🚫'}</span> <span>${p.name}</span>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn ${p.activeForDraw ? 'btn-warning' : 'btn-secondary'}" 
+                                    onclick="window.togglePlayerActiveStatus(${p.id})"
+                                    style="padding: 5px 10px; font-size: 0.8em; border-radius: 15px; cursor: pointer;">
+                                ${p.activeForDraw ? '👎':'👍'}
+                            </button>
+                            <button class="btn btn-primary" 
+                                    onclick="window.addFixedPlayerToTeam('A', ${p.id})" 
+                                    ${isDisabled || !p.activeForDraw ? 'disabled' : ''}
+                                    style="padding: 5px 10px; font-size: 0.8em; border-radius: 15px; cursor: pointer;">
+                                Fixar A
+                            </button>
+                            <button class="btn btn-danger" 
+                                    onclick="window.addFixedPlayerToTeam('B', ${p.id})" 
+                                    ${isDisabled || !p.activeForDraw ? 'disabled' : ''}
+                                    style="padding: 5px 10px; font-size: 0.8em; border-radius: 15px; cursor: pointer;">
+                                Fixar B
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                ">
+                    <strong>Jogadores:</strong>
+                    <div style="
+                        margin-top: 10px;
+                        display: flex;
+                        flex-wrap: wrap; 
+                        gap: 10px;
+                        justify-content: flex-start; 
+                    ">
+                        ${playerDivs}
+                    </div>
+                </div>
+            `;
+
+            window.updateFixedTeamsList(); 
+        };
+
+        // Adiciona jogador a um time fixo
+        window.addFixedPlayerToTeam = function(team, playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+
+            const isAlreadyFixed = fixedTeamA.some(p => p.id === playerId) || fixedTeamB.some(p => p.id === playerId);
+            if (isAlreadyFixed) {
+                alert('Este jogador já está fixo em um time.');
+                return;
+            }
+
+            if (!player.activeForDraw) {
+                alert('Para fixar um jogador, ele precisa estar ativo para o sorteio (avaliado pela mulher)!');
+                return;
+            }
+
+            if (team === 'A') {
+                fixedTeamA.push(player);
+            } else if (team === 'B') {
+                fixedTeamB.push(player);
+            }
+            window.updatePlayersList(); 
+            window.updateFixedTeamsList(); 
+            window.checkDrawButtonState(); 
+        };
+
+        // Remove jogador de um time fixo
+        window.removeFixedPlayer = function(team, playerId) {
+            if (team === 'A') {
+                fixedTeamA = fixedTeamA.filter(p => p.id !== playerId);
+            } else if (team === 'B') {
+                fixedTeamB = fixedTeamB.filter(p => p.id !== playerId);
+            }
+            window.updatePlayersList(); 
+            window.updateFixedTeamsList(); 
+            window.checkDrawButtonState(); 
+        };
+
+        // Atualiza a exibição dos jogadores fixos
+        window.updateFixedTeamsList = function() {
+            const fixedTeamAList = document.getElementById('fixedTeamA_list');
+            const fixedTeamBList = document.getElementById('fixedTeamB_list');
+            const fixedContainer = document.querySelector('.teams-fixed-container');
+
+            fixedTeamAList.innerHTML = '';
+            fixedTeamBList.innerHTML = '';
+
+            fixedTeamA.forEach(player => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${player.name} 
+                    <button class="btn btn-secondary" onclick="window.removeFixedPlayer('A', ${player.id})" style="padding: 3px 8px; font-size: 0.7em; border-radius: 10px; cursor: pointer;">
+                        Remover
+                    </button>
+                `;
+                fixedTeamAList.appendChild(li);
+            });
+
+            fixedTeamB.forEach(player => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${player.name} 
+                    <button class="btn btn-secondary" onclick="window.removeFixedPlayer('B', ${player.id})" style="padding: 3px 8px; font-size: 0.7em; border-radius: 10px; cursor: pointer;">
+                        Remover
+                    </button>
+                `;
+                fixedTeamBList.appendChild(li);
+            });
+
+            if (fixedTeamA.length > 0 || fixedTeamB.length > 0) {
+                fixedContainer.style.display = 'grid';
+            } else {
+                fixedContainer.style.display = 'none';
+            }
+        };
+
+        // Corrige a lógica para ativar/desativar o botão de sorteio
+        window.checkDrawButtonState = function() {
+            const drawButton = document.getElementById('drawButton');
+            const activePlayersCount = players.filter(p => p.activeForDraw).length;
+            const minPlayersNeeded = 12; // ALTERADO PARA 12 JOGADORES
+            
+            const teamsAreCurrentlyDrawnAndPersisted = localStorage.getItem('hasDrawnTeams') === 'true';
+
+            if (teamsAreCurrentlyDrawnAndPersisted) {
+                drawButton.disabled = true;
+                drawButton.innerHTML = '🎯 Times Sorteados';
+            } else if (activePlayersCount < minPlayersNeeded) {
+                drawButton.disabled = true;
+                drawButton.innerHTML = `🚫 Adicione jogadores para sortear (${activePlayersCount}/${minPlayersNeeded})`;
+            } else {
+                drawButton.disabled = false;
+                drawButton.innerHTML = '🎯 Sortear Times';
+            }
+        };
+
+        // Sorteia times
+        window.drawTeams = function() {
+            const allActivePlayers = players.filter(p => p.activeForDraw);
+
+            // AQUI TAMBÉM É BOM GARANTIR O MÍNIMO DE JOGADORES ANTES DE TENTAR SORTEAR
+            const minPlayersNeeded = 12;
+            if (allActivePlayers.length < minPlayersNeeded) {
+                alert(`❌ É necessário ter pelo menos ${minPlayersNeeded} jogadores ativos para sortear os times!`);
+                return;
+            }
+
+            let tempTeamA = [...fixedTeamA];
+            let tempTeamB = [...fixedTeamB];
+
+            const availableForRandomDraw = allActivePlayers.filter(p => 
+                !fixedTeamA.some(fp => fp.id === p.id) && 
+                !fixedTeamB.some(fp => fp.id === p.id)
             );
 
-            // Teste simples
-            const { error } = await client
-                .from('jogadores')
-                .select('id')
-                .limit(1);
+            const shuffledAvailable = [...availableForRandomDraw].sort(() => Math.random() - 0.5);
 
-            if (error) throw error;
+            let currentShuffledIndex = 0;
 
-            isConnected = true;
-            showStatus('✅ Conectado ao Supabase com Publishable Key!', 'connected');
+            while (currentShuffledIndex < shuffledAvailable.length) {
+                if (tempTeamA.length <= tempTeamB.length) {
+                    tempTeamA.push(shuffledAvailable[currentShuffledIndex]);
+                } else {
+                    tempTeamB.push(shuffledAvailable[currentShuffledIndex]);
+                }
+                currentShuffledIndex++;
+            }
+            
+            currentTeamA = tempTeamA;
+            currentTeamB = tempTeamB;
 
-            await loadData();
-
-        } catch (error) {
-            console.error("Erro na conexão:", error);
-            showStatus(`❌ Erro ao conectar: ${error.message}`, 'error');
-            isConnected = false;
-        }
-    }
-
-    // ================================
-    // STATUS
-    // ================================
-    function showStatus(message, type) {
-        const statusDiv = document.getElementById('connectionStatus');
-        statusDiv.textContent = message;
-        statusDiv.className = `connection-status status-${type}`;
-    }
-
-    // ================================
-    // RESTAURAR TIMES DO LOCALSTORAGE
-    // ================================
-    function restoreDrawFromLocalStorage() {
-        const savedTeamA = localStorage.getItem('savedCurrentTeamA');
-        const savedTeamB = localStorage.getItem('savedCurrentTeamB');
-        const savedReserves = localStorage.getItem('savedPlayersNotInGame');
-        const hasDrawn = localStorage.getItem('hasDrawnTeams');
-
-        if (savedTeamA && savedTeamB && hasDrawn === 'true') {
-            currentTeamA = JSON.parse(savedTeamA);
-            currentTeamB = JSON.parse(savedTeamB);
-            const playersNotInGame = savedReserves ? JSON.parse(savedReserves) : [];
-
-            displayTeams(playersNotInGame);
+            const playersInGameIds = new Set([...currentTeamA.map(p => p.id), ...currentTeamB.map(p => p.id)]);
+            const playersNotInGame = allActivePlayers.filter(p => !playersInGameIds.has(p.id));
+            
+            window.displayTeams(playersNotInGame);
             document.getElementById('resultSection').style.display = 'block';
+            
             document.getElementById('drawButton').disabled = true;
             document.getElementById('drawButton').innerHTML = '🎯 Times Sorteados';
-        }
-    }
 
-    // ================================
-    // CARREGAR DADOS
-    // ================================
-    async function loadData() {
-        if (!isConnected) return;
+            localStorage.setItem('savedCurrentTeamA', JSON.stringify(currentTeamA));
+            localStorage.setItem('savedCurrentTeamB', JSON.stringify(currentTeamB));
+            localStorage.setItem('savedPlayersNotInGame', JSON.stringify(playersNotInGame));
+            localStorage.setItem('hasDrawnTeams', 'true');
+        };
 
-        try {
-            showStatus('📥 Carregando jogadores...', 'loading');
+        // Exibe times sorteados e jogadores não selecionados
+        window.displayTeams = function(playersNotInGame) {
+            const teamAList = document.getElementById('teamA');
+            const teamBList = document.getElementById('teamB');
+            const teamsContainer = document.getElementById('teamsContainer');
+            const reservesList = document.getElementById('reservesList');
+            const reservesSection = document.getElementById('reservesSection');
 
-            const { data, error } = await client
-                .from('jogadores')
-                .select(`
-                    id,
-                    name,
-                    active_for_draw,
-                    posicao (
-                        pontos,
-                        vitorias,
-                        derrotas,
-                        empates
-                    )
-                `);
+            teamAList.innerHTML = '';
+            teamBList.innerHTML = '';
+            reservesList.innerHTML = '';
 
-            if (error) throw error;
+            currentTeamA.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player.name;
+                teamAList.appendChild(li);
+            });
+            
+            currentTeamB.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player.name;
+                teamBList.appendChild(li);
+            });
+            
+            if (playersNotInGame.length > 0) {
+                playersNotInGame.forEach(player => {
+                    const li = document.createElement('li');
+                    li.textContent = player.name;
+                    reservesList.appendChild(li);
+                });
+                reservesSection.style.display = 'block';
+            } else {
+                reservesSection.style.display = 'none';
+            }
 
-            players = data.map(j => ({
-                id: j.id,
-                name: j.name,
-                points: j.posicao?.[0]?.pontos ?? 0,
-                wins: j.posicao?.[0]?.vitorias ?? 0,
-                draws: j.posicao?.[0]?.empates ?? 0,
-                losses: j.posicao?.[0]?.derrotas ?? 0,
-                activeForDraw: j.active_for_draw ?? true
-            }));
+            teamsContainer.style.display = 'grid';
+        };
 
-            updateRanking();
-            updateStats();
-            updatePlayersList();
-            checkDrawButtonState();
+        // Registra resultado do jogo
+        window.registerResult = async function() {
+            if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
+            
+            const result = document.getElementById('gameResult').value;
+            if (!result) {
+                alert('❌ Por favor, selecione o resultado do jogo!');
+                return;
+            }
+            
+            if (currentTeamA.length === 0 || currentTeamB.length === 0) {
+                alert('❌ É necessário sortear os times primeiro!');
+                return;
+            }
+            
+            try {
+                const updates = [];
+                
+                if (result === 'teamA') {
+                    currentTeamA.forEach(player => {
+                        updates.push({
+                            idJogador: player.id,
+                            pontos: player.points + 3,
+                            vitorias: player.wins + 1,
+                            derrotas: player.losses,
+                            empates: player.draws
+                        });
+                    });
+                    currentTeamB.forEach(player => {
+                        updates.push({
+                            idJogador: player.id,
+                            pontos: player.points,
+                            vitorias: player.wins,
+                            derrotas: player.losses + 1,
+                            empates: player.draws
+                        });
+                    });
+                } else if (result === 'teamB') {
+                    currentTeamB.forEach(player => {
+                        updates.push({
+                            idJogador: player.id,
+                            pontos: player.points + 3,
+                            vitorias: player.wins + 1,
+                            derrotas: player.losses,
+                            empates: player.draws
+                        });
+                    });
+                    currentTeamA.forEach(player => {
+                        updates.push({
+                            idJogador: player.id,
+                            pontos: player.points,
+                            vitorias: player.wins,
+                            derrotas: player.losses + 1,
+                            empates: player.draws
+                        });
+                    });
+                } else if (result === 'draw') {
+                    [...currentTeamA, ...currentTeamB].forEach(player => {
+                        updates.push({
+                            idJogador: player.id,
+                            pontos: player.points + 2,
+                            vitorias: player.wins,
+                            derrotas: player.losses,
+                            empates: player.draws + 1
+                        });
+                    });
+                }
+                
+                for (const update of updates) {
+                    const { error } = await client
+                        .from('posicao')
+                        .update({
+                            pontos: update.pontos,
+                            vitorias: update.vitorias,
+                            derrotas: update.derrotas,
+                            empates: update.empates
+                        })
+                        .eq('idJogador', update.idJogador);
+                    
+                    if (error) throw error;
+                }
+                
+                await window.loadData(); 
+                
+                document.getElementById('gameResult').value = '';
+                document.getElementById('resultSection').style.display = 'none';
+                document.getElementById('teamsContainer').style.display = 'none';
+                document.getElementById('reservesSection').style.display = 'none';
+                currentTeamA = []; 
+                currentTeamB = []; 
+                fixedTeamA = []; 
+                fixedTeamB = [];
+                window.updateFixedTeamsList(); 
+                window.updatePlayersList(); 
 
-            showStatus('✅ Dados carregados!', 'connected');
+                alert('✅ Resultado registrado com sucesso!');
+                
+                document.getElementById('drawButton').disabled = false;
+                document.getElementById('drawButton').innerHTML = '🎯 Sortear Times'; 
 
-        } catch (error) {
-            showStatus(`❌ Erro ao carregar: ${error.message}`, 'error');
-        }
-    }
+                localStorage.removeItem('savedCurrentTeamA');
+                localStorage.removeItem('savedCurrentTeamB');
+                localStorage.removeItem('savedPlayersNotInGame');
+                localStorage.removeItem('hasDrawnTeams');
 
-    // ================================
-    // ADICIONAR JOGADOR
-    // ================================
-    async function addPlayer() {
-        if (!isConnected) return alert("Não conectado.");
+            } catch (error) {
+                console.error('Erro ao registrar resultado:', error);
+                alert(`❌ Erro ao registrar resultado: ${error.message}`);
+            }
+        };
 
-        const name = document.getElementById('newPlayerName').value.trim();
-        if (!name) return alert("Digite o nome.");
+        // Atualiza ranking (Classificação Geral) - NOVO MODELO: Tabela Clean
+        window.updateRanking = function() {
+            const sortedPlayers = [...players].sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return b.draws - a.draws;
+            });
+            
+            const tbody = document.getElementById('rankingTableBody');
+            tbody.innerHTML = '';
 
-        try {
-            const { data, error } = await client
-                .from('jogadores')
-                .insert([{
-                    name,
-                    dtRegistro: new Date().toISOString(),
-                    active_for_draw: true
-                }])
-                .select();
+            if (sortedPlayers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #777;">Nenhum jogador no ranking.</td></tr>';
+                return;
+            }
 
-            if (error) throw error;
+            const medalEmojis = ['🥇', '🥈', '🥉'];
 
-            const jogadorId = data[0].id;
+            sortedPlayers.forEach((player, index) => {
+                const row = document.createElement('tr');
+                let rankClass = 'pos-default';
+                let positionContent = `<span class="pos-badge-minimal ${rankClass}">${index + 1}</span>`;
 
-            await client.from('posicao').insert([{
-                idJogador: jogadorId,
-                pontos: 0,
-                vitorias: 0,
-                derrotas: 0,
-                empates: 0
-            }]);
+                if (index < 3) {
+                    rankClass = `pos-${index + 1}`;
+                    positionContent = `<span class="pos-badge-minimal ${rankClass}">${medalEmojis[index]}</span>`;
+                    row.classList.add('top-rank-row', `pos-${index + 1}`);
+                }
+                
+                row.innerHTML = `
+                    <td>${positionContent}</td>
+                    <td>${player.name}</td>
+                    <td><strong>${player.points}</strong></td>
+                    <td>${player.wins}</td>
+                    <td>${player.draws}</td>
+                    <td>${player.losses}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        };
 
-            document.getElementById('newPlayerName').value = '';
-            await loadData();
-            alert("Jogador adicionado!");
+        // Atualiza estatísticas
+        window.updateStats = function() {
+            document.getElementById('totalPlayers').textContent = players.length;
+            
+            const maxPoints = players.length > 0 ? Math.max(...players.map(p => p.points)) : 0;
+            document.getElementById('leaderPoints').textContent = maxPoints;
+        };
 
-        } catch (error) {
-            alert(error.message);
-        }
-    }
+        // Reseta todos os dados
+        window.resetAllData = async function() {
+            if (!confirm('Tem certeza que deseja resetar todos os dados? Esta ação é irreversível.')) {
+                return;
+            }
+            if (!isConnected) {
+                alert('❌ Conecte-se ao Supabase primeiro!');
+                return;
+            }
+            try {
+                // Apaga dados de posicao
+                let { error: error1 } = await client.from('posicao').delete().neq('idJogador', 0);
+                if (error1) throw error1;
 
-    // ================================
-    // ATUALIZAR RANKING
-    // ================================
-    function updateRanking() {
-        const sorted = [...players]
-            .filter(p => !p.name.toLowerCase().includes('avulso'))
-            .sort((a, b) =>
-                b.points - a.points ||
-                b.wins - a.wins ||
-                b.draws - a.draws
-            );
+                // Apaga dados de jogadores
+                let { error: error2 } = await client.from('jogadores').delete().neq('id', 0);
+                if (error2) throw error2;
 
-        const tbody = document.getElementById('rankingTableBody');
-        tbody.innerHTML = '';
+                await window.loadData();
+                alert('✅ Dados resetados com sucesso!');
 
-        sorted.forEach((p, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${p.name}</td>
-                <td><strong>${p.points}</strong></td>
-                <td>${p.wins}</td>
-                <td>${p.draws}</td>
-                <td>${p.losses}</td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    // ================================
-    // ESTATÍSTICAS
-    // ================================
-    function updateStats() {
-        document.getElementById('totalPlayers').textContent = players.length;
-        const maxPoints = players.length > 0 ? Math.max(...players.map(p => p.points)) : 0;
-        document.getElementById('leaderPoints').textContent = maxPoints;
-    }
-
-    // ================================
-    // EXPOR FUNÇÕES PARA HTML
-    // ================================
-    window.addPlayer = addPlayer;
-</script>
+                localStorage.removeItem('savedCurrentTeamA');
+                localStorage.removeItem('savedCurrentTeamB');
+                localStorage.removeItem('savedPlayersNotInGame');
+                localStorage.removeItem('hasDrawnTeams');
+                
+            } catch (error) {
+                console.error('Erro ao resetar:', error);
+                alert(`❌ Erro ao resetar: ${error.message}`);
+            }
+        };
+    </script>
 </body>
-
 </html>
