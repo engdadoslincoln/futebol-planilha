@@ -654,7 +654,7 @@
     const SUPABASE_URL = 'https://ofdaxmhklseogkfsvmdx.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_luxIrS6L2jeHfH1mmWhsBw_z3CRmnBl';
 
-    let supabase = null;
+    let client = null;
     let players = [];
     let currentTeamA = [];
     let currentTeamB = [];
@@ -681,7 +681,7 @@
                 throw new Error("SDK Supabase não carregado.");
             }
 
-            supabase = window.supabase.createClient(
+            client = window.supabase.createClient(
                 SUPABASE_URL,
                 SUPABASE_PUBLISHABLE_KEY,
                 {
@@ -692,7 +692,7 @@
             );
 
             // Teste simples
-            const { error } = await supabase
+            const { error } = await client
                 .from('jogadores')
                 .select('id')
                 .limit(1);
@@ -750,7 +750,7 @@
         try {
             showStatus('📥 Carregando jogadores...', 'loading');
 
-            const { data, error } = await supabase
+            const { data, error } = await client
                 .from('jogadores')
                 .select(`
                     id,
@@ -798,7 +798,7 @@
         if (!name) return alert("Digite o nome.");
 
         try {
-            const { data, error } = await supabase
+            const { data, error } = await client
                 .from('jogadores')
                 .insert([{
                     name,
@@ -811,7 +811,7 @@
 
             const jogadorId = data[0].id;
 
-            await supabase.from('posicao').insert([{
+            await client.from('posicao').insert([{
                 idJogador: jogadorId,
                 pontos: 0,
                 vitorias: 0,
